@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include <vector>
 #include <iostream>
+#include <time.h>
 using namespace std;
 
 class MySearchAndSortFunction
@@ -11,7 +12,7 @@ class MySearchAndSortFunction
 public:
 	MySearchAndSortFunction()
 	{
-		data = { 2,5,4,7,9,3,6,8,7,1,0,10 };
+		data = { 8,7,6,5,4,3,2,1 };
 	}
 	void PrintData()
 	{
@@ -29,6 +30,7 @@ public:
 
 	void MergeSort(vector<int> &a);
 	void HeapSort(vector<int> & a);
+	void QuickSort(vector<int>&a);
 	vector<int> data;
 private:
 	//归并排序使用到的函数
@@ -40,6 +42,12 @@ private:
 	void swim_up(vector<int> &a, int k, int N);//上浮
 	bool less(vector<int> &a, int i, int j);//实际比较大小时，索引从0开始
 	void exchange(vector<int> &a, int i, int j);//实际交换时，索引从0开始
+
+	//快速排序用到的函数
+	int Partition(vector<int> &a, int low, int high);//选择第一个数作为中间数，排序后左边的小于中间数，右边的大于中间数，返回中间数的位置
+	int RandomPostion(vector<int> &a, int low, int high);//生成一个low-high的随机数，作为中间数调整,调用Partition
+	void QuickSort(vector<int>&a,int low,int high);
+
 
 
 
@@ -217,6 +225,7 @@ void MySearchAndSortFunction::MergeSort(vector<int> &a, int *temp, int low, int 
 {
 	if (low >= high)
 	{
+		//数组小可以用直接插入排序
 		return;
 
 	}
@@ -224,7 +233,7 @@ void MySearchAndSortFunction::MergeSort(vector<int> &a, int *temp, int low, int 
 	int mid = (low + high) / 2;
 	MergeSort(a, temp, low, mid);
 	MergeSort(a, temp, mid + 1, high);
-	if (a[mid] <= a[mid + 1])
+	if (a[mid] <= a[mid + 1])//边界有序，整体有序，不用再归并
 		return;
 	Merge(a, temp, low, mid, high);
 }
@@ -310,11 +319,98 @@ void MySearchAndSortFunction::exchange(vector<int> &a, int i, int j)
 	a[j - 1] = temp;
 }
 
+int MySearchAndSortFunction::Partition(vector<int> &a, int low, int high)
+{
+	int key = a[low];//第一个数low作为中间数来调整
+	int i = low;
+	int j = high;
+	while (i < j)
+	{
+		while (i < j&&a[j] >= key)
+			--j;
+		if (i < j)
+			swap(a[i++], a[j]);
+		while (i < j&&a[i] < key)
+			++i;
+		if (i < j)
+			swap(a[i], a[j--]);
+	}
+	a[i] = key;
+	return i;
+
+	
+}
+
+int MySearchAndSortFunction::RandomPostion(vector<int> &a, int low, int high)//随机值基准优化，也可以用中位数 low mid high值中间的那个做基准
+{
+	srand(time(NULL));
+	int randpos = rand() % (high - low + 1) + low;
+	swap(a[low], a[randpos]);//将生成的随机值与第一个元素交换，因为实现的Partition是用第一个元素做中间数的
+	return Partition(a, low, high);
+}
+
+void MySearchAndSortFunction::QuickSort(vector<int>&a, int low, int high)
+{
+	if (low < high)
+	{
+		int mid = RandomPostion(a, low, high);
+		QuickSort(a, low, mid - 1);
+		QuickSort(a, mid + 1, high);
+	}
+
+	/*
+	优化
+	可以设置一个值，high-low>=max_thresold时才用快排，数组容量小时用直接插入排序，效率开销小，且是稳定的
+	if(high-low>=max_thresold)
+	{
+	int mid = RandomPostion(a, low, high);
+	QuickSort(a, low, mid - 1);
+	QuickSort(a, mid + 1, high);
+	}
+	else
+	{
+		insertSrot(a,low,high);
+	}
+	
+	
+	*/
+	
+	/*
+	非递归快排用栈实现,伪代码
+	stack.push(low);
+	stack.push(right);
+	while(!stack.empty())
+	{
+		int right=stack.pop;
+		int left=stack.pop;
+		if(left<right)
+		{
+			int mid=RandomPostion(a, left, right);
+			stack.push(left);
+			stack.push(mid-1);
+
+			stack.push(mid+1);
+			stack.push(right);
+		}
+	}
+	
+	
+	*/
+	
+}
+
+void MySearchAndSortFunction::QuickSort(vector<int>&a)
+{
+	if (a.empty())
+		return;
+	QuickSort(a, 0, a.size() - 1);
+}
+
 int main()
 {
 	MySearchAndSortFunction a;
 	a.PrintData();
-	a.HeapSort(a.data);
+	a.QuickSort(a.data);
 	a.PrintData();
 	//cout << a.BinarySearch(a.data, 11);
 }
