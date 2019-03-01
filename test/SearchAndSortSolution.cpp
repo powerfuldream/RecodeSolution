@@ -28,10 +28,18 @@ public:
 	void BubbleSort(vector<int> &a);
 
 	void MergeSort(vector<int> &a);
+	void HeapSort(vector<int> & a);
 	vector<int> data;
 private:
+	//归并排序使用到的函数
 	void MergeSort(vector<int> &a, int *temp, int low, int high);
 	void Merge(vector<int> &a, int *temp, int low, int mid, int high);
+
+	//堆排序使用到的函数
+	void sink_down(vector<int> &a, int k, int N);//下潜，数组索引都是从1开始
+	void swim_up(vector<int> &a, int k, int N);//上浮
+	bool less(vector<int> &a, int i, int j);//实际比较大小时，索引从0开始
+	void exchange(vector<int> &a, int i, int j);//实际交换时，索引从0开始
 
 
 
@@ -223,6 +231,8 @@ void MySearchAndSortFunction::MergeSort(vector<int> &a, int *temp, int low, int 
 
 
 
+
+
 void MySearchAndSortFunction::Merge(vector<int> &a, int *temp, int low, int mid, int high)
 {
 	int lpos = low;//左边数组起点，终点mid
@@ -245,11 +255,66 @@ void MySearchAndSortFunction::Merge(vector<int> &a, int *temp, int low, int mid,
 
 }
 
+void MySearchAndSortFunction::HeapSort(vector<int> & a)
+{
+	if (a.empty())
+		return;
+	int N = a.size();
+	for (int i = N / 2; i >= 1; --i)//堆排序第一步，用下潜的方式使堆有序，下潜比上浮的方式循环次数更少
+	{
+		sink_down(a, i, N);
+	}
+
+	for (int i = N; i > 1; --i)//堆排序第二步，第一个最大的元素与最后一个元素交换，长度减一，对第一个元素下潜使堆保持有序
+	{
+		exchange(a, 1, i);
+		--N;
+		sink_down(a, 1, N);
+	}
+}
+
+void MySearchAndSortFunction::sink_down(vector<int> &a, int k, int N)
+{
+	int j;
+	while (2 * k <= N)
+	{
+		j = 2 * k;//子节点位置
+		if (j < N&&less(a,j,j+1))//判断是否有右子节点 ，比较和左子节点的大小
+		{
+			++j;
+		}
+		if (less(a, k, j))
+			exchange(a, k, j);
+		k = j;
+	}
+}
+
+void MySearchAndSortFunction::swim_up(vector<int> &a, int k, int N)
+{
+	while (k > 1 && less(a, k / 2, k))
+	{
+		exchange(a, k / 2, k);
+		k = k / 2;
+	}
+}
+
+bool MySearchAndSortFunction::less(vector<int> &a, int i, int j)
+{
+	return a[i - 1] < a[j - 1] ? true : false;
+}
+
+void MySearchAndSortFunction::exchange(vector<int> &a, int i, int j)
+{
+	int temp = a[i - 1];
+	a[i - 1] = a[j - 1];
+	a[j - 1] = temp;
+}
+
 int main()
 {
 	MySearchAndSortFunction a;
 	a.PrintData();
-	a.MergeSort(a.data);
+	a.HeapSort(a.data);
 	a.PrintData();
 	//cout << a.BinarySearch(a.data, 11);
 }
